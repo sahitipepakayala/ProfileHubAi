@@ -66,7 +66,7 @@ export default function CandidateMatchCard({ variant, onSelect, selected }: Cand
       </div>
       <p className="text-xs text-gray-500 mt-0.5">{m.email}</p>
       <div className="flex flex-wrap gap-1 mt-1.5">
-        {m.skills?.slice(0, 3).map((s) => (
+        {m.skills?.slice(0, 3).map((s: string) =>(
           <span key={s} className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
             {s}
           </span>

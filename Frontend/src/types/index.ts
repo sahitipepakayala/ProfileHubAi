@@ -137,7 +137,27 @@ export interface CandidateMatch {
   score: number;
   matchPercentage: number;
 }
+export interface KeywordCandidateMatch extends CandidateMatch {
+  candidateId: string;
+  matchedSkills?: string[];
+  missingSkills?: string[];
+}
 
+export interface SemanticCandidateMatch extends CandidateMatch {
+  candidateId: string;
+  semanticScore?: number;
+  similarityScore?: number;
+  matchedSkills?: string[];
+}
+
+export interface HybridCandidateMatch extends CandidateMatch {
+  candidateId: string;
+  keywordScore?: number;
+  semanticScore?: number;
+  hybridScore: number;
+  matchedSkills?: string[];
+  missingSkills?: string[];
+}
 export interface JobMatch {
   _id: string;
   rawDescription: string;
