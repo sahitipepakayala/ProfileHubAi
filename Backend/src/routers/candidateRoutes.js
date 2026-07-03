@@ -13,7 +13,7 @@ const { protect } = require("../middleware/authMiddleware");
 const { restrictTo } = require("../middleware/roleMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 const { getMyApplications } = require("../controllers/applicationController");
-const { getMyInterviews, respondToInterview } = require("../controllers/interviewController");
+const { getMyInterviews, respondToInterview } = require("../controllers/InterviewController");
 const {
   sendCandidateMessage,
   getMyMessages,

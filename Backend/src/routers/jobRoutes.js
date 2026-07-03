@@ -24,7 +24,7 @@ const {
 const {
   scheduleInterview,
   getJobInterviews,
-} = require("../controllers/interviewController");
+} = require("../controllers/InterviewController");
 const { getJobDashboard } = require("../controllers/dashboardController");
 const {
   sendMessage,
