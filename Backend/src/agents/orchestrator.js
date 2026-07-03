@@ -47,7 +47,7 @@
 
 
 const { semanticMatch } = require("./semanticMatchingAgent");
-const { runHybridMatching } = require("./hybridMatchingAgent");
+const { runHybridMatching } = require("./Hybridmatchingagent");
 const { runLangGraphMatchingPipeline } = require("./langgraphOrchestrator");
 
 /**
