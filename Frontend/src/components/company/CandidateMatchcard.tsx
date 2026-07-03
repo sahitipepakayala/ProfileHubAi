@@ -15,43 +15,58 @@ interface CandidateMatchCardProps {
   selected?: boolean;
 }
 
-// Handles all three matching pipelines' different response shapes.
-// Not currently used anywhere — JobDetail.tsx renders hybrid matches inline
-// instead — but available if you add keyword/semantic tabs later, since
-// your API layer already supports all three (see jobsApi.ts).
 const normalize = (variant: MatchVariant) => {
   switch (variant.kind) {
     case "keyword":
       return {
-        candidateId: variant.match.candidateId,
+        candidateId: variant.match.candidateId ?? variant.match._id,
         fullName: variant.match.fullName,
         email: variant.match.email,
-        score: variant.match.matchScore,
-        skills: variant.match.matchedSkills,
+        score: variant.match.matchScore ?? variant.match.score ?? 0,
+        skills: variant.match.matchedSkills ?? [],
       };
+
     case "semantic":
       return {
-        candidateId: variant.match._id,
+        candidateId: variant.match.candidateId ?? variant.match._id,
         fullName: variant.match.fullName,
         email: variant.match.email,
-        score: variant.match.matchPercentage,
-        skills: variant.match.skills,
+        score:
+          variant.match.matchPercentage ??
+          variant.match.semanticScore ??
+          variant.match.similarityScore ??
+          0,
+        skills: variant.match.skills ?? variant.match.matchedSkills ?? [],
       };
+
     case "hybrid":
       return {
-        candidateId: variant.match.candidateId,
+        candidateId: variant.match.candidateId ?? variant.match._id,
         fullName: variant.match.fullName,
         email: variant.match.email,
-        score: variant.match.hybridScore,
-        skills: variant.match.matchedSkills,
+        score:
+          variant.match.hybridScore ??
+          variant.match.matchPercentage ??
+          variant.match.score ??
+          0,
+        skills: variant.match.matchedSkills ?? variant.match.skills ?? [],
       };
   }
 };
 
-export default function CandidateMatchCard({ variant, onSelect, selected }: CandidateMatchCardProps) {
+export default function CandidateMatchCard({
+  variant,
+  onSelect,
+  selected,
+}: CandidateMatchCardProps) {
   const m = normalize(variant);
+
   const color =
-    m.score >= 80 ? "bg-green-50 text-green-700" : m.score >= 60 ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-600";
+    m.score >= 80
+      ? "bg-green-50 text-green-700"
+      : m.score >= 60
+      ? "bg-amber-50 text-amber-700"
+      : "bg-red-50 text-red-600";
 
   return (
     <button
@@ -62,16 +77,29 @@ export default function CandidateMatchCard({ variant, onSelect, selected }: Cand
     >
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-gray-900">{m.fullName}</p>
-        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>{m.score}%</span>
+
+        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>
+          {m.score}%
+        </span>
       </div>
+
       <p className="text-xs text-gray-500 mt-0.5">{m.email}</p>
+
       <div className="flex flex-wrap gap-1 mt-1.5">
-        {m.skills?.slice(0, 3).map((s: string) =>(
-          <span key={s} className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
+        {m.skills.slice(0, 3).map((s: string) => (
+          <span
+            key={s}
+            className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded"
+          >
             {s}
           </span>
         ))}
-        {m.skills?.length > 3 && <span className="text-xs text-gray-400">+{m.skills.length - 3}</span>}
+
+        {m.skills.length > 3 && (
+          <span className="text-xs text-gray-400">
+            +{m.skills.length - 3}
+          </span>
+        )}
       </div>
     </button>
   );

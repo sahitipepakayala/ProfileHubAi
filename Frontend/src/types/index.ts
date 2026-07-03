@@ -129,22 +129,23 @@ export interface Interview {
 
 export interface CandidateMatch {
   _id: string;
+  candidateId?: string;
   fullName: string;
   email: string;
-  skills: string[];
+  skills?: string[];
   experienceYears: number;
   careerGoal: string;
-  score: number;
-  matchPercentage: number;
+  score?: number;
+  matchScore?: number;
+  matchPercentage?: number;
 }
+
 export interface KeywordCandidateMatch extends CandidateMatch {
-  candidateId: string;
   matchedSkills?: string[];
   missingSkills?: string[];
 }
 
 export interface SemanticCandidateMatch extends CandidateMatch {
-  candidateId: string;
   semanticScore?: number;
   similarityScore?: number;
   matchedSkills?: string[];
@@ -158,6 +159,8 @@ export interface HybridCandidateMatch extends CandidateMatch {
   matchedSkills?: string[];
   missingSkills?: string[];
 }
+
+
 export interface JobMatch {
   _id: string;
   rawDescription: string;
