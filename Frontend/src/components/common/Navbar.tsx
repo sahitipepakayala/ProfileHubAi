@@ -70,8 +70,10 @@ export default function Navbar() {
                 >
                   Career Tools
                 </Link>
+                <Link to="/candidate/messages" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">Messages</Link>
               </>
             )}
+            
 
             {/* Role badge + logout */}
             <div className="flex items-center gap-3 ml-2 pl-4 border-l border-gray-200">

@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
-
+import CandidateMessages from "./pages/candidate/CandidateMessages";
 // Auth pages
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
@@ -91,6 +91,15 @@ export default function App() {
             path="/candidate/career-tools"
             element={<RequireRole role="candidate"><CareerTools /></RequireRole>}
           />
+          <Route
+  path="/candidate/career-tools"
+  element={<RequireRole role="candidate"><CareerTools /></RequireRole>}
+/>
+
+<Route
+  path="/candidate/messages"
+  element={<RequireRole role="candidate"><CandidateMessages /></RequireRole>}
+/>
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
