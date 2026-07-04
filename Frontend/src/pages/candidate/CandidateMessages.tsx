@@ -34,26 +34,33 @@ export default function CandidateMessages() {
   }, []);
 
   const getJobId = (msg: Message) => {
+    if (!msg.job) return null;
     return typeof msg.job === "object" ? msg.job._id : msg.job;
   };
 
   const getJobTitle = (msg: Message) => {
+    if (!msg.job) return "Job Conversation";
+
     if (typeof msg.job === "object") {
       return msg.job.extractedRoles?.join(", ") || "Job Conversation";
     }
+
     return "Job Conversation";
   };
 
   const getCompanyName = (msg: Message) => {
+    if (!msg.company) return "Company";
+
     if (typeof msg.company === "object") {
       return msg.company.companyName || "Company";
     }
+
     return "Company";
   };
 
   const conversationJobIds = Array.from(
-    new Set(messages.map((msg) => getJobId(msg)))
-  );
+    new Set(messages.map((msg) => getJobId(msg)).filter(Boolean))
+  ) as string[];
 
   const handleOpenConversation = async (jobId: string) => {
     setSelectedJobId(jobId);
