@@ -196,35 +196,42 @@
 
 
 
-
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   getJobMatches,
   getMyApplications,
   withdrawApplication,
+  getMyInterviews,
+  respondToInterview,
 } from "../../api/candidateApi";
-import type { JobMatch, Application } from "../../types";
+import type { JobMatch, Application, Interview } from "../../types";
 import Loader from "../../components/common/Loader";
+
+type DashboardTab = "matches" | "applications" | "interviews";
 
 export default function CandidateDashboard() {
   const [matches, setMatches] = useState<JobMatch[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState("");
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<"matches" | "applications">("matches");
+  const [tab, setTab] = useState<DashboardTab>("matches");
 
   const fetchData = async () => {
     try {
       setError("");
-      const [matchRes, appRes] = await Promise.all([
+
+      const [matchRes, appRes, interviewRes] = await Promise.all([
         getJobMatches().catch(() => ({ matches: [] })),
         getMyApplications().catch(() => ({ applications: [] })),
+        getMyInterviews().catch(() => ({ interviews: [] })),
       ]);
+
       setMatches(matchRes.matches ?? []);
       setApplications(appRes.applications ?? []);
+      setInterviews(interviewRes.interviews ?? []);
     } catch {
       setError("Failed to load dashboard.");
     } finally {
@@ -237,41 +244,64 @@ export default function CandidateDashboard() {
   }, []);
 
   const handleWithdrawApplication = async (applicationId: string) => {
-  const confirmWithdraw = window.confirm(
-    "Are you sure you want to withdraw this application?"
-  );
-
-  if (!confirmWithdraw) return;
-
-  try {
-    setActionLoading(applicationId);
-
-    const res = await withdrawApplication(applicationId);
-
-    setApplications((prev) =>
-      prev.map((app) =>
-        app._id === applicationId
-          ? { ...app, status: "withdrawn" }
-          : app
-      )
+    const confirmWithdraw = window.confirm(
+      "Are you sure you want to withdraw this application?"
     );
 
-    alert(res.message || "Application withdrawn successfully");
-    setTab("applications");
-    await fetchData();
-  } catch (error: any) {
-    console.error("Withdraw frontend error:", error);
-    console.error("Withdraw response:", error.response?.data);
+    if (!confirmWithdraw) return;
 
-    alert(
-      error.response?.data?.message ||
-        error.message ||
-        "Failed to withdraw application"
-    );
-  } finally {
-    setActionLoading("");
-  }
-};
+    try {
+      setActionLoading(applicationId);
+
+      const res = await withdrawApplication(applicationId);
+
+      setApplications((prev) =>
+        prev.map((app) =>
+          app._id === applicationId ? { ...app, status: "withdrawn" } : app
+        )
+      );
+
+      alert(res.message || "Application withdrawn successfully");
+      setTab("applications");
+      await fetchData();
+    } catch (error: any) {
+      alert(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to withdraw application"
+      );
+    } finally {
+      setActionLoading("");
+    }
+  };
+
+  const handleInterviewResponse = async (
+    interviewId: string,
+    response: "confirmed" | "declined"
+  ) => {
+    try {
+      setActionLoading(interviewId);
+
+      const res = await respondToInterview(interviewId, response);
+
+      setInterviews((prev) =>
+        prev.map((interview) =>
+          interview._id === interviewId ? res.interview : interview
+        )
+      );
+
+      alert(`Interview ${response} successfully.`);
+      await fetchData();
+    } catch (error: any) {
+      alert(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to respond to interview"
+      );
+    } finally {
+      setActionLoading("");
+    }
+  };
 
   if (loading) return <Loader />;
 
@@ -300,19 +330,26 @@ export default function CandidateDashboard() {
       )}
 
       <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
-        {(["matches", "applications"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-all capitalize ${
-              tab === t
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            {t} {t === "matches" ? `(${matches.length})` : `(${applications.length})`}
-          </button>
-        ))}
+        {(["matches", "applications", "interviews"] as DashboardTab[]).map(
+          (t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-all capitalize ${
+                tab === t
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {t}{" "}
+              {t === "matches"
+                ? `(${matches.length})`
+                : t === "applications"
+                ? `(${applications.length})`
+                : `(${interviews.length})`}
+            </button>
+          )
+        )}
       </div>
 
       {tab === "matches" && (
@@ -369,7 +406,7 @@ export default function CandidateDashboard() {
                       </p>
 
                       <div className="flex flex-wrap gap-1.5">
-                        {match.extractedSkills?.slice(0, 5).map((s) => (
+                        {match.extractedSkills?.slice(0, 5).map((s: string) => (
                           <span
                             key={s}
                             className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full"
@@ -440,8 +477,91 @@ export default function CandidateDashboard() {
                         disabled={actionLoading === app._id}
                         className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 disabled:opacity-50"
                       >
-                        {actionLoading === app._id ? "Withdrawing..." : "Withdraw"}
+                        {actionLoading === app._id
+                          ? "Withdrawing..."
+                          : "Withdraw"}
                       </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "interviews" && (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          {interviews.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-12">
+              No interviews scheduled yet.
+            </p>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {interviews.map((interview) => {
+                const job = interview.job as any;
+                const company = interview.company as any;
+                const canRespond = interview.status === "proposed";
+
+                return (
+                  <div key={interview._id} className="px-6 py-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {job?.extractedRoles?.join(", ") || "Interview"}
+                        </p>
+
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {company?.companyName || "Company"}
+                          {company?.industry ? ` · ${company.industry}` : ""}
+                        </p>
+
+                        <p className="text-sm text-gray-700 mt-3">
+                          {new Date(interview.scheduledAt).toLocaleString()}
+                        </p>
+
+                        <p className="text-xs text-gray-500 mt-1 capitalize">
+                          Mode: {interview.mode}
+                        </p>
+
+                        {interview.meetingDetails && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            {interview.meetingDetails}
+                          </p>
+                        )}
+
+                        {interview.notes && (
+                          <p className="text-xs text-gray-500 mt-2 italic">
+                            {interview.notes}
+                          </p>
+                        )}
+                      </div>
+
+                      <InterviewStatusBadge status={interview.status} />
+                    </div>
+
+                    {canRespond && (
+                      <div className="flex gap-2 mt-4">
+                        <button
+                          onClick={() =>
+                            handleInterviewResponse(interview._id, "confirmed")
+                          }
+                          disabled={actionLoading === interview._id}
+                          className="text-xs px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                        >
+                          Confirm
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            handleInterviewResponse(interview._id, "declined")
+                          }
+                          disabled={actionLoading === interview._id}
+                          className="text-xs px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 disabled:opacity-50"
+                        >
+                          Decline
+                        </button>
+                      </div>
                     )}
                   </div>
                 );
@@ -462,6 +582,26 @@ function ApplicationStatusBadge({ status }: { status: string }) {
     rejected: "bg-red-50 text-red-600",
     hired: "bg-green-50 text-green-700",
     withdrawn: "bg-red-50 text-red-600",
+  };
+
+  return (
+    <span
+      className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${
+        colors[status] ?? "bg-gray-100 text-gray-600"
+      }`}
+    >
+      {status}
+    </span>
+  );
+}
+
+function InterviewStatusBadge({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    proposed: "bg-amber-50 text-amber-700",
+    confirmed: "bg-green-50 text-green-700",
+    declined: "bg-red-50 text-red-600",
+    completed: "bg-blue-50 text-blue-700",
+    cancelled: "bg-gray-100 text-gray-600",
   };
 
   return (

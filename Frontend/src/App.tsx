@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
-import CandidateMessages from "./pages/candidate/CandidateMessages";
 // Auth pages
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
@@ -16,7 +15,8 @@ import CandidateDashboard from "./pages/candidate/CandidateDashboard";
 import CandidateProfile from "./pages/candidate/CandidateProfile";
 import JobMatchDetail from "./pages/candidate/JobMatchDetail";
 import CareerTools from "./pages/candidate/CareerTools";
-
+import CandidateInterviews from "./pages/candidate/CandidateInterviews";
+import CandidateMessages from "./pages/candidate/CandidateMessages";
 // Common
 import Navbar from "./components/common/Navbar";
 import Loader from "./components/common/Loader";
@@ -99,6 +99,10 @@ export default function App() {
 <Route
   path="/candidate/messages"
   element={<RequireRole role="candidate"><CandidateMessages /></RequireRole>}
+/>
+<Route
+  path="/candidate/interviews"
+  element={<RequireRole role="candidate"><CandidateInterviews /></RequireRole>}
 />
 
           {/* Fallback */}
